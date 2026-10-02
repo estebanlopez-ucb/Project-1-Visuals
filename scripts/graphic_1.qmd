@@ -1,0 +1,24 @@
+---
+title: "Graphic_1"
+format: html
+---
+```{r}
+library(tidyverse)
+library(scales)
+data_1 <- read.csv("/Users/estebanlopez/Downloads/graph.csv", skip = 1)
+colnames(data_1) <- c("Year", "Land_Annual", "Land_Lowess5", "Ocean_Annual", "Ocean_Lowess5")
+data_1 |> 
+ggplot(aes(x = Year)) +
+  geom_line(aes(y = Land_Annual, color = "Land Surface Air Temperature")) +
+  geom_point(aes(y = Land_Annual, color = "Land Surface Air Temperature")) +
+  geom_line(aes(y = Ocean_Annual, color = "Sea Surface Water Temperature"), linetype = "dashed") +
+  geom_point(aes(y = Ocean_Annual, color = "Sea Surface Water Temperature")) +
+  geom_line(aes(y = Land_Lowess5, color = "Land Lowess Smoothing")) +
+  geom_line(aes(y = Ocean_Lowess5, color = "Sea Lowess Smoothing")) +
+  scale_color_manual( name = NULL, values = c("Land Surface Air Temperature" = "orange", "Land Lowess Smoothing" = "red", "Sea Surface Water Temperature" = "blue", "Sea Lowess Smoothing"  = "#89CFF0")) +
+scale_x_continuous(breaks = seq(1880, 2020, by = 20), labels = label_comma()) +
+  scale_y_continuous(breaks = seq(-0.8, 2.0, by = 0.2)) +
+  labs( title = "Temperature Anomalies over Land and over Ocean", y = "Temperature Anomaly w.r.t. 1951-80 (°C)", x = NULL) +
+  annotate("text", x = 2015, y = -0.7, label = "NASA/GISS/GISTEMP v4", hjust = 1, size = 4) +
+  theme( plot.title = element_text(hjust = 0.5, face = "bold", size = 14), legend.position = c(0.25, 0.8), legend.background = element_rect(fill = "white", color = "gray80"))
+```
