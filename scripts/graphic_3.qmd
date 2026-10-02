@@ -1,0 +1,31 @@
+---
+title: "graphic_3"
+format: html
+---
+```{r}
+library(tidyverse)
+library(scales)
+data_3 <- read.csv("/Users/estebanlopez/Downloads/graph (4).csv", skip = 2)
+colnames(data_3) <- c("Year", "No_Smoothing", "Lowess5")
+
+data_3$Uncertainty <- 0.04 + 0.10 * exp(-(data_3$Year - 1880) / 45)
+data_3$Uncertainty[data_3$Year >= 1900 & data_3$Year <= 1920] <- data_3$Uncertainty[data_3$Year >= 1900 & data_3$Year <= 1920] + 0.04
+
+data_3$ymin <- data_3$No_Smoothing - data_3$Uncertainty
+data_3$ymax <- data_3$No_Smoothing + data_3$Uncertainty
+
+ggplot(data_3, aes(x = Year)) +
+  geom_ribbon(aes(ymin = ymin, ymax = ymax, fill = "LSAT+SST Uncertainty"), alpha = 0.8) +
+  
+  geom_line(aes(y = No_Smoothing, color = "Annual Mean"), linewidth = 0.5) +
+  geom_point(aes(y = No_Smoothing, color = "Annual Mean"), shape = 15, size = 1.5) +
+  
+  geom_line(aes(y = Lowess5, color = "Lowess Smoothing"), linewidth = 1.1) +
+  scale_fill_manual(name = NULL, values = c("LSAT+SST Uncertainty" = "#D3D3D3")) +
+  scale_color_manual( name = NULL, values = c("Annual Mean" = "black", "Lowess Smoothing" = "red")) +
+  scale_x_continuous( breaks = seq(1880, 2020, by = 20), labels = label_comma()) +
+  scale_y_continuous(breaks = seq(-0.6, 1.4, by = 0.2)) +
+  labs(title = "Global Mean Estimates based on Land and Ocean Data", y = "Temperature Anomaly w.r.t. 1951-80 (°C)", x = NULL) +
+  annotate("text", x = 2025, y = -0.55, label = "NASA/GISS/GISTEMP v4", hjust = 1, size = 4) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 13), axis.title.y = element_text(size = 11), axis.text = element_text(size = 10, color = "black"), legend.position = c(0.22, 0.82), legend.background = element_rect(fill = "white", color = "gray90"), legend.key = element_blank())
+```

@@ -1,0 +1,124 @@
+---
+title: "Project 1 Report"
+author: "Esteban Lopez"
+date: "2026-10-01"
+format: gfm
+---
+
+# Summary
+
+The purpose of this data project is to replicate four different visualizations made via NASA's GISS Surface Temperature Analysis. By completing this replication project, the following is demonstrated: reproducible data workflows, data visualization, and clean project sharing with Github. 
+
+## Graphic 1
+```{r echo = FALSE, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(scales)
+data_1 <- read.csv("/Users/estebanlopez/Downloads/graph.csv", skip = 1)
+colnames(data_1) <- c("Year", "Land_Annual", "Land_Lowess5", "Ocean_Annual", "Ocean_Lowess5")
+data_1 |> 
+ggplot(aes(x = Year)) +
+  geom_line(aes(y = Land_Annual, color = "Land Surface Air Temperature")) +
+  geom_point(aes(y = Land_Annual, color = "Land Surface Air Temperature")) +
+  geom_line(aes(y = Ocean_Annual, color = "Sea Surface Water Temperature"), linetype = "dashed") +
+  geom_point(aes(y = Ocean_Annual, color = "Sea Surface Water Temperature")) +
+  geom_line(aes(y = Land_Lowess5, color = "Land Lowess Smoothing")) +
+  geom_line(aes(y = Ocean_Lowess5, color = "Sea Lowess Smoothing")) +
+  scale_color_manual( name = NULL, values = c("Land Surface Air Temperature" = "orange", "Land Lowess Smoothing" = "red", "Sea Surface Water Temperature" = "blue", "Sea Lowess Smoothing"  = "#89CFF0")) +
+scale_x_continuous(breaks = seq(1880, 2020, by = 20), labels = label_comma()) +
+  scale_y_continuous(breaks = seq(-0.8, 2.0, by = 0.2)) +
+  labs( title = "Temperature Anomalies over Land and over Ocean", y = "Temperature Anomaly w.r.t. 1951-80 (°C)", x = NULL) +
+  annotate("text", x = 2015, y = -0.7, label = "NASA/GISS/GISTEMP v4", hjust = 1, size = 4) +
+  theme( plot.title = element_text(hjust = 0.5, face = "bold", size = 14), legend.position = c(0.25, 0.8), legend.background = element_rect(fill = "white", color = "gray80"))
+```
+
+This graphic depicts temperature anomolies throughout the decades and based on different regions, with a clear difference from temperatures long ago. This highlights how global temperatures have been increasing consistently overall, with a sharp increase in temperatures starting from the 1980s. 
+
+## Graphic 2
+```{r echo = FALSE, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(scales)
+data_2 <- read.csv("/Users/estebanlopez/Downloads/graph (3).csv", skip = 1)
+month_labels <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+data_2 <- data_2 %>%
+  mutate(Year_int = floor(Year), Month = factor(rep(month_labels, length.out = n()), levels = month_labels))
+
+df_hist <- data_2 %>% filter(Year_int < 2026)
+df_2026 <- data_2 %>% filter(Year_int == 2026)
+ggplot() +
+geom_line(data = df_hist, aes(x = Month, y = Anomaly, group = Year_int, color = Year_int)) +
+geom_line(data = df_2026, aes(x = Month, y = Anomaly, group = Year_int), color = "#4a148c", linewidth = 1.1) +
+geom_point(data = df_2026, aes(x = Month, y = Anomaly), color = "black", size = 1.8) +
+  scale_color_gradientn(
+    colors = c("#3f51b5", "#42a5f5", "#26a69a", "#66bb6a", "#d4e157", "#ffa726", "#e53935", "#880e4f"), breaks = seq(1880, 2020, by = 20), name = NULL) +
+  labs( title = "GISTEMP Seasonal Cycle since 1880", y = "Temperature Anomaly w.r.t. 1980-2015 (°C)", x = NULL, caption = "Seasonal cycle from MERRA2. Figure: NASA/GISS/GISTEMP v4") + 
+  theme(legend.position = c(0.08, 0.78), legend.background = element_blank())
+```
+
+This graphic shows the seasonal cycles of temperatures from January to December. It's apparent from the visualizations that the overall highest annual temperatures have increased throughout time, with the highest temperatures being recorded in July and August. 
+
+## Graphic 3
+
+```{r echo = FALSE, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(scales)
+data_3 <- read.csv("/Users/estebanlopez/Downloads/graph (4).csv", skip = 2)
+colnames(data_3) <- c("Year", "No_Smoothing", "Lowess5")
+
+data_3$Uncertainty <- 0.04 + 0.10 * exp(-(data_3$Year - 1880) / 45)
+data_3$Uncertainty[data_3$Year >= 1900 & data_3$Year <= 1920] <- data_3$Uncertainty[data_3$Year >= 1900 & data_3$Year <= 1920] + 0.04
+
+data_3$ymin <- data_3$No_Smoothing - data_3$Uncertainty
+data_3$ymax <- data_3$No_Smoothing + data_3$Uncertainty
+
+ggplot(data_3, aes(x = Year)) +
+  geom_ribbon(aes(ymin = ymin, ymax = ymax, fill = "LSAT+SST Uncertainty"), alpha = 0.8) +
+  
+  geom_line(aes(y = No_Smoothing, color = "Annual Mean"), linewidth = 0.5) +
+  geom_point(aes(y = No_Smoothing, color = "Annual Mean"), shape = 15, size = 1.5) +
+  
+  geom_line(aes(y = Lowess5, color = "Lowess Smoothing"), linewidth = 1.1) +
+  scale_fill_manual(name = NULL, values = c("LSAT+SST Uncertainty" = "#D3D3D3")) +
+  scale_color_manual( name = NULL, values = c("Annual Mean" = "black", "Lowess Smoothing" = "red")) +
+  scale_x_continuous( breaks = seq(1880, 2020, by = 20), labels = label_comma()) +
+  scale_y_continuous(breaks = seq(-0.6, 1.4, by = 0.2)) +
+  labs(title = "Global Mean Estimates based on Land and Ocean Data", y = "Temperature Anomaly w.r.t. 1951-80 (°C)", x = NULL) +
+  annotate("text", x = 2025, y = -0.55, label = "NASA/GISS/GISTEMP v4", hjust = 1, size = 4) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 13), axis.title.y = element_text(size = 11), axis.text = element_text(size = 10, color = "black"), legend.position = c(0.22, 0.82), legend.background = element_rect(fill = "white", color = "gray90"), legend.key = element_blank())
+```
+
+This graphic depicts global mean temperature anomolies throughout time. It demonstrates that there has been a steady increase in the global mean temperatues as compared to previous decades. 
+
+## Graphic 4
+
+```{r echo = FALSE, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(scales)
+data_3 <- read.csv("/Users/estebanlopez/Downloads/graph (4).csv", skip = 2)
+colnames(data_3) <- c("Year", "No_Smoothing", "Lowess5")
+
+late_19th_avg <- mean(data_3$No_Smoothing[data_3$Year >= 1880 & data_3$Year <= 1899])
+df_nyt <- data_3[data_3$Year <= 2018, ]
+df_nyt$Anomaly_19thC <- df_nyt$No_Smoothing - late_19th_avg
+
+ggplot(df_nyt, aes(x = Year, y = Anomaly_19thC)) +
+  geom_hline(yintercept = seq(-0.4, 1.2, by = 0.2), linetype = "dotted", color = "white") +
+  geom_hline(yintercept = 0, color = "#888888", linewidth = 0.5) +
+  geom_line(color = "#555555", linewidth = 0.5) +
+  geom_point(aes(fill = Anomaly_19thC >= 0), shape = 21, size = 2.4, color = "#444444", stroke = 0.4) +
+  scale_fill_manual(values = c("FALSE" = "#B0C4DE", "TRUE" = "#E8A388"), guide = "none") +
+
+  scale_x_continuous(breaks = seq(1880, 2010, by = 10), limits = c(1875, 2022)) +
+  annotate("text", x = 1895, y = 1.12, label = "Rising Global Temperature", fontface = "bold", size = 5.5, hjust = 0) +
+  annotate("text", x = 1895, y = 0.92, label = "How much cooler or warmer every year\nwas compared with the average\ntemperature of the late 19th century", size = 3.8, color = "#333333", hjust = 0, vjust = 1) +
+  annotate("text", x = 2018, y = 0.12, label = "HOTTER THAN THE\n1880-1899 AVERAGE", size = 2.8, color = "#333333", hjust = 1, vjust = 0) +
+  annotate("text", x = 2018, y = -0.08, label = "COLDER", size = 2.8, color = "#333333", hjust = 1, vjust = 1) +
+  annotate("text", x = 1904, y = -0.31, label = "1904", size = 3.6) +
+  annotate("text", x = 1946, y = 0.43, label = "1944", size = 3.6, hjust = 0) +
+  annotate("text", x = 1996, y = 0.85, label = "1998", size = 3.6, hjust = 1) +
+  annotate("text", x = 2016.5, y = 1.26, label = "2016", size = 3.6, hjust = 0) +
+  annotate("text", x = 2018.5, y = 1.08, label = "2018", fontface = "bold", size = 3.6, hjust = 0) +
+  annotate("text", x = 1880, y = -0.48, label = "Source: NASA | By The New York Times", size = 3.2, color = "#888888", hjust = 0) 
+```
+
+This direct graphical replication of the NY Times visualizations shows just how far the global temperature has gone since the average from the late 1800s. The blue data points in the plot depict temperatures cooler than late 19th century average, while the orange depict temperatures warmer than the baseline average. As you can see, temperatres have gone far past the averages from the late 1800s, and only seem to be increasing overall. 

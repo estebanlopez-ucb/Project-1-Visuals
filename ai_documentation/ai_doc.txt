@@ -1,0 +1,2 @@
+
+ For this project, I utilized the Google's built-in Gemini helper to help me figure out the specific names of the colors in the graphics, as well as how to move objects like the legend in the graphics.  
